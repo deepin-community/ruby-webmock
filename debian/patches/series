@@ -1,0 +1,6 @@
+skip-gem-building-whitespace-tests.patch
+#deactivate_tests_with_network.patch
+#skip-excon-incompatible-test.patch
+remove-patron.patch
+#skip-HTTP_rb-tests.patch
+drop-load-path-manipulation.diff

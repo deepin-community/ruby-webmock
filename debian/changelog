@@ -1,0 +1,128 @@
+ruby-webmock (3.8.3-2) UNRELEASED; urgency=medium
+
+  * update
+
+ -- Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>  Thu, 21 Jul 2022 17:53:50 +0800
+
+ruby-webmock (3.8.3-2) unstable; urgency=medium
+
+  * add make depend: ruby-webrick
+  * update version.
+
+ -- wangxiangyu <wangxiangyu@uniontech.com>  Thu, 21 Jul 2022 17:52:56 -0300
+
+ruby-webmock (3.8.3-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream version 3.8.3
+  * Refresh packaging files with dh-make-ruby
+  * debian/ruby-tests.rake: exclude tests for broken dependencies
+  * Add patch to drop manipulation of $LOAD_PATH
+
+ -- Antonio Terceiro <terceiro@debian.org>  Fri, 27 Mar 2020 11:19:56 -0300
+
+ruby-webmock (3.7.3-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream version 3.7.3
+  * Use secure copyright file specification URI.
+  * Refresh remove-patron.patch
+  * Bump Standards-Version to 4.4.0 (no changes needed)
+  * Drop compat file, rely on debhelper-compat and bump compat level to 12
+  * Add upstream/metadata
+  * Use secure URI in Homepage field.
+  * Minimal version on ruby-hashdiff dependency
+  * Skip tests based on async-http gem (not packaged)
+
+ -- Cédric Boutillier <boutil@debian.org>  Mon, 16 Sep 2019 23:23:44 +0200
+
+ruby-webmock (3.4.2-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream version 3.4.2
+  * Use salsa.debian.org in Vcs-* fields
+  * Bump Standards-Version to 4.1.5 (no changes needed)
+  * Move debian/watch to gemwatch.debian.net
+  * Bump debhelper compatibility level to 11
+  * Refresh remove-patron.patch
+
+ -- Cédric Boutillier <boutil@debian.org>  Mon, 30 Jul 2018 20:58:02 +0200
+
+ruby-webmock (3.0.1-1) unstable; urgency=medium
+
+  * Team upload
+
+  [ Cédric Boutillier ]
+  * Bump debhelper compatibility level to 9
+  * Remove version in the gem2deb build-dependency
+  * Use https:// in Vcs-* fields
+  * Use https:// in Vcs-* fields
+  * Bump Standards-Version to 3.9.7 (no changes needed)
+  * Run wrap-and-sort on packaging files
+
+  [ Lucas Nussbaum ]
+  * New upstream version 3.0.1
+  * Refresh packaging:
+    + d/control: stricter dependencies.
+    + d/control: bump S-Version.
+    + d/ruby-webmock.docs: install README.md
+    + d/rules: remove boilerplate
+  * Disable skip-HTTP_rb-tests.patch (no longer needed)
+  * Bump standards-version to 4.0.0
+
+ -- Lucas Nussbaum <lucas@debian.org>  Wed, 05 Jul 2017 07:48:07 +0200
+
+ruby-webmock (1.22.6-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Refresh patches
+  * Drop remove-rubygems-curb-version-check.patch, not needed
+    anymore
+  * New (build-)dependency: ruby-hashdiff
+  * Skip tests for HTTP gem as backend (not yet available in Debian)
+  * debian/ruby-tests.rake: exclude upstream code quality checks, which will
+    fail on debian/patches/* and metadata.yml
+  * debian/control: switch Vcs-* to https
+
+ -- Antonio Terceiro <terceiro@debian.org>  Sun, 31 Jan 2016 19:14:49 -0200
+
+ruby-webmock (1.19.0-1) unstable; urgency=medium
+
+  * Team upload
+  * Imported Upstream version 1.19.0
+  * Bump standards-version to 3.9.6 (no changes needed)
+  * Set Testsuite field to autopkgtest-pkg-ruby in debian/control
+  * Add a filter in debian/ruby-tests.rake to deactivate tests using network
+    access
+  * Drop skip-excon-incompatible-test.patch and
+    deactivate_tests_with_network.patch, not needed anymore
+
+ -- Cédric Boutillier <boutil@debian.org>  Tue, 30 Sep 2014 23:18:11 +0200
+
+ruby-webmock (1.18.0-1) unstable; urgency=medium
+
+  * Team upload
+  * Imported Upstream version 1.18.0
+    - now compatible with ruby-http >= 0.6.0, which fixes
+      the failure to build from source (Closes: #752944)
+
+ -- Cédric Boutillier <boutil@debian.org>  Tue, 08 Jul 2014 13:21:22 +0200
+
+ruby-webmock (1.17.4-2) unstable; urgency=medium
+
+  * Remove ruby-patron from dependencies
+    - it is unmaintained and removed from testing
+  * Exclude patron tests
+
+ -- Pirate Praveen <praveen@debian.org>  Wed, 21 May 2014 11:44:27 +0530
+
+ruby-webmock (1.17.4-1) unstable; urgency=low
+
+  * Initial release (Closes: #695194)
+
+  [ Cédric Boutillier ]
+  * Add ca-certificates in build dep
+    - fixes https test failures.
+
+ -- Pirate Praveen <praveen@debian.org>  Sun, 20 Apr 2014 08:26:59 +0530

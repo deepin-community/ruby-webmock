@@ -1,0 +1,27 @@
+Description: ignore whitespace test failures
+Author: Praveen Arimbrathodiyil <praveen@debian.org>
+Forwarded: no
+Last-Update: 2013-05-26
+
+--- a/spec/quality_spec.rb
++++ b/spec/quality_spec.rb
+@@ -61,9 +61,10 @@ describe "The library itself" do
+   end
+ 
+   it "has no malformed whitespace" do
++		pending 'don\'t bother with tab in debian/rules'
+     error_messages = []
+     Dir.chdir(File.expand_path("../..", __FILE__)) do
+-      `git ls-files`.split("\n").each do |filename|
++      `find * -type f`.split("\n").each do |filename|
+         next if filename =~ /\.gitmodules|fixtures/
+         error_messages << check_for_tab_characters(filename)
+         error_messages << check_for_extra_spaces(filename)
+@@ -73,6 +74,7 @@ describe "The library itself" do
+   end
+ 
+   it "can still be built" do
++		pending 'git ls-files to build gemspec won\'t work outside git repo'
+     Dir.chdir(File.expand_path('../../', __FILE__)) do
+       `gem build webmock.gemspec`
+       expect($?).to eq(0)

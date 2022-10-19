@@ -1,0 +1,54 @@
+Source: ruby-webmock
+Section: ruby
+Priority: optional
+Maintainer: Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>
+Uploaders: Pirate Praveen <praveen@debian.org>
+Build-Depends: debhelper-compat (= 12),
+               gem2deb (>= 1),
+               rake,
+               ruby-addressable (>= 2.3.6),
+               ruby-crack (>= 0.3.2),
+               ruby-curb,
+               ruby-em-http-request (>= 1.1.2),
+               ruby-em-socksify,
+               ruby-escape-utils (>= 1.0.1),
+               ruby-eventmachine (>= 1.0.3-6),
+               ruby-excon (>= 0.27.5~),
+               ruby-hashdiff (>= 0.4~),
+               ruby-http,
+               ruby-httpclient,
+               ruby-minitest,
+               ruby-rack,
+               ruby-rspec,
+               ruby-safe-yaml,
+               ruby-test-unit,
+               ruby-typhoeus,
+	       ruby-webrick
+Standards-Version: 4.4.0
+Vcs-Git: https://salsa.debian.org/ruby-team/ruby-webmock.git
+Vcs-Browser: https://salsa.debian.org/ruby-team/ruby-webmock
+Homepage: https://github.com/bblimke/webmock
+Testsuite: autopkgtest-pkg-ruby
+XS-Ruby-Versions: all
+Rules-Requires-Root: no
+
+Package: ruby-webmock
+Architecture: all
+XB-Ruby-Versions: ${ruby:Versions}
+Depends: ${misc:Depends},
+         ${ruby:Depends},
+         ${shlibs:Depends}
+Recommends: ca-certificates
+Description: library for stubbing HTTP requests in Ruby
+ WebMock allows stubbing HTTP requests and setting expectations on HTTP
+ requests.
+ .
+ Features
+ .
+  * Stubbing HTTP requests at low http client lib level (no need to change
+    tests when you change HTTP library).
+  * Setting and verifying expectations on HTTP requests.
+  * Matching requests based on method, URI, headers and body.
+  * Smart matching of the same URIs in different representations (also encoded
+     and non encoded forms).
+  * Smart matching of the same headers in different representations.

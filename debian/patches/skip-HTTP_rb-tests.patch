@@ -1,0 +1,16 @@
+Description: Ignore tests for HTTP.rb backend
+ It is not available in Debian yet.
+Author: Antonio Terceiro <terceiro@debian.org>
+Origin: vendor
+Forwarded: not-needed
+Last-Update: 2016-01-22
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/spec/acceptance/http_rb/http_rb_spec.rb
++++ b/spec/acceptance/http_rb/http_rb_spec.rb
+@@ -70,4 +70,4 @@ describe "HTTP.rb" do
+       expect(response.uri.to_s).to eq "http://example.com/foo"
+     end
+   end
+-end
++end if begin gem 'HTTP'; true; rescue LoadError; false; end
