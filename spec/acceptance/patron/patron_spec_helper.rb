@@ -28,8 +28,8 @@ module PatronSpecHelper
       end
     end
 
-    status_line_pattern = %r(\AHTTP/(\d+\.\d+)\s+(\d\d\d)\s*([^\r\n]+)?)
-    message = response.status_line.match(status_line_pattern)[3] || ""
+    status_line_pattern = %r(\AHTTP/(\d+(\.\d+)?)\s+(\d\d\d)\s*([^\r\n]+)?)
+    message = response.status_line.match(status_line_pattern)[4] || ""
 
     OpenStruct.new({
       body: response.body,
@@ -45,6 +45,9 @@ module PatronSpecHelper
 
   def connection_refused_exception_class
     Patron::ConnectionFailed
+  end
+
+  def connection_error_class
   end
 
   def http_library

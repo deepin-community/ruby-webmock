@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 begin
   require 'httpclient'
   require 'jsonclient' # defined in 'httpclient' gem as well
@@ -43,6 +45,11 @@ if defined?(::HTTPClient)
   end
 
   module WebMockHTTPClients
+    WEBMOCK_HTTPCLIENT_RESPONSES = :webmock_httpclient_responses
+    WEBMOCK_HTTPCLIENT_REQUEST_SIGNATURES = :webmock_httpclient_request_signatures
+
+    REQUEST_RESPONSE_LOCK = Mutex.new
+
     def do_get_block(req, proxy, conn, &block)
       do_get(req, proxy, conn, false, &block)
     end
@@ -52,6 +59,8 @@ if defined?(::HTTPClient)
     end
 
     def do_get(req, proxy, conn, stream = false, &block)
+      clear_thread_variables unless conn.async_thread
+
       request_signature = build_request_signature(req, :reuse_existing)
 
       WebMock::RequestRegistry.instance.requested_signatures.put(request_signature)
@@ -98,12 +107,16 @@ if defined?(::HTTPClient)
     end
 
     def do_request_async(method, uri, query, body, extheader)
+      clear_thread_variables
       req = create_request(method, uri, query, body, extheader)
       request_signature = build_request_signature(req)
       webmock_request_signatures << request_signature
 
       if webmock_responses[request_signature] || WebMock.net_connect_allowed?(request_signature.uri)
-        super
+        conn = super
+        conn.async_thread[WEBMOCK_HTTPCLIENT_REQUEST_SIGNATURES] = Thread.current[WEBMOCK_HTTPCLIENT_REQUEST_SIGNATURES]
+        conn.async_thread[WEBMOCK_HTTPCLIENT_RESPONSES] = Thread.current[WEBMOCK_HTTPCLIENT_RESPONSES]
+        conn
       else
         raise WebMock::NetConnectNotAllowedError.new(request_signature)
       end
@@ -152,13 +165,13 @@ if defined?(::HTTPClient)
     end
 
     def build_request_signature(req, reuse_existing = false)
-      uri = WebMock::Util::URI.heuristic_parse(req.header.request_uri.to_s)
-      uri.query = WebMock::Util::QueryMapper.values_to_query(req.header.request_query, notation: WebMock::Config.instance.query_values_notation) if req.header.request_query
-      uri.port = req.header.request_uri.port
-
       @request_filter.each do |filter|
         filter.filter_request(req)
       end
+
+      uri = WebMock::Util::URI.heuristic_parse(req.header.request_uri.to_s)
+      uri.query = WebMock::Util::QueryMapper.values_to_query(req.header.request_query, notation: WebMock::Config.instance.query_values_notation) if req.header.request_query
+      uri.port = req.header.request_uri.port
 
       headers = req.header.all.inject({}) do |hdrs, header|
         hdrs[header[0]] ||= []
@@ -183,13 +196,13 @@ if defined?(::HTTPClient)
     end
 
     def webmock_responses
-      @webmock_responses ||= Hash.new do |hash, request_signature|
+      Thread.current[WEBMOCK_HTTPCLIENT_RESPONSES] ||= Hash.new do |hash, request_signature|
         hash[request_signature] = WebMock::StubRegistry.instance.response_for_request(request_signature)
       end
     end
 
     def webmock_request_signatures
-      @webmock_request_signatures ||= []
+      Thread.current[WEBMOCK_HTTPCLIENT_REQUEST_SIGNATURES] ||= []
     end
 
     def previous_signature_for(signature)
@@ -208,6 +221,11 @@ if defined?(::HTTPClient)
         hdrs[header[0]] = header[1]
         hdrs
       end
+    end
+
+    def clear_thread_variables
+      Thread.current[WEBMOCK_HTTPCLIENT_REQUEST_SIGNATURES] = nil
+      Thread.current[WEBMOCK_HTTPCLIENT_RESPONSES] = nil
     end
   end
 

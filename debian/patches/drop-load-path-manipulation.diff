@@ -1,3 +1,13 @@
+From: Debian Ruby Team <pkg-ruby-extras-maintainers@lists.alioth.debian.org>
+Date: Wed, 17 Jul 2024 19:21:05 -0300
+Subject: drop-load-path-manipulation
+
+---
+ spec/spec_helper.rb | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/spec/spec_helper.rb b/spec/spec_helper.rb
+index 9508e6d..3091e30 100644
 --- a/spec/spec_helper.rb
 +++ b/spec/spec_helper.rb
 @@ -9,8 +9,6 @@ if RUBY_PLATFORM =~ /java/
@@ -7,5 +17,5 @@
 -$LOAD_PATH.unshift(File.dirname(__FILE__))
 -$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
  require 'rspec'
+ require 'rspec/retry'
  
- require 'webmock/rspec'

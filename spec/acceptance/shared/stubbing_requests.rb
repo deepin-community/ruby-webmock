@@ -178,12 +178,44 @@ shared_examples_for "stubbing requests" do |*adapter_info|
               body: "foo=1").status).to eq("200")
             end
 
-            it "should match if stubbed request body is hash_included" do
-              WebMock.reset!
-              stub_request(:post, "www.example.com").with(body: {"foo" => hash_including("bar" => '1')})
-              expect(http_request(
-                       :post, "http://www.example.com/", headers: {'Content-Type' => 'application/x-www-form-urlencoded'},
-                       body: "foo[bar]=1").status).to eq("200")
+            context "when using hash_including to match the request body" do
+              it "should match if stubbed request body is including hash" do
+                WebMock.reset!
+                stub_request(:post, "www.example.com").with(body: {"foo" => hash_including("bar" => '1')})
+                expect(http_request(
+                         :post, "http://www.example.com/", headers: {'Content-Type' => 'application/x-www-form-urlencoded'},
+                         body: "foo[bar]=1").status).to eq("200")
+              end
+
+              it "should not match if stubbed request body is excluding hash" do
+                WebMock.reset!
+                stub_request(:post, "www.example.com").with(body: {"foo" => hash_including("bar" => '1')})
+                expect {
+                  http_request(:post, "http://www.example.com/",
+                    headers: {'Content-Type' => 'application/x-www-form-urlencoded'},
+                    body: "foo[xyz]=1")
+                }.to raise_error(WebMock::NetConnectNotAllowedError)
+              end
+            end
+
+            context "when using hash_excluding to match the request body" do
+              it "should match if stubbed request body is excluding hash" do
+                WebMock.reset!
+                stub_request(:post, "www.example.com").with(body: {"foo" => hash_excluding("bar" => '1')})
+                expect(http_request(
+                   :post, "http://www.example.com/", headers: {'Content-Type' => 'application/x-www-form-urlencoded'},
+                   body: "foo[xyz]=1").status).to eq("200")
+              end
+
+              it "should not match if stubbed request body is including hash" do
+                WebMock.reset!
+                stub_request(:post, "www.example.com").with(body: {"foo" => hash_excluding("bar" => '1')})
+                expect {
+                  http_request(:post, "http://www.example.com/",
+                    headers: {'Content-Type' => 'application/x-www-form-urlencoded'},
+                    body: "foo[bar]=1")
+                }.to raise_error(WebMock::NetConnectNotAllowedError)
+              end
             end
           end
         end
@@ -593,6 +625,23 @@ shared_examples_for "stubbing requests" do |*adapter_info|
           end
         end
       end
+
+      context "when global stub should be invoked last" do
+        before do
+          WebMock.globally_stub_request(:after_local_stubs) do
+            { body: "global stub body" }
+          end
+        end
+
+        it "uses global stub when non-global stub is not defined" do
+          expect(http_request(:get, "http://www.example.com/").body).to eq("global stub body")
+        end
+
+        it "uses non-global stub first" do
+          stub_request(:get, "www.example.com").to_return(body: 'non-global stub body')
+          expect(http_request(:get, "http://www.example.com/").body).to eq("non-global stub body")
+        end
+      end
     end
 
     describe "when stubbing request with a block evaluated on request" do
@@ -638,6 +687,24 @@ shared_examples_for "stubbing requests" do |*adapter_info|
       expect {
         http_request(:get, "http://www.example.com/")
       }.to raise_error(WebMock::NetConnectNotAllowedError, %r(Real HTTP connections are disabled. Unregistered request: GET http://www.example.com/))
+    end
+  end
+
+  describe "in Rspec around(:each) hook" do
+    # order goes
+    # around(:each)
+    # before(:each)
+    # after(:each)
+    # anything after example.run in around(:each)
+    around(:each) do |example|
+      example.run
+      expect {
+        http_request(:get, "http://www.example.com/")
+      }.to_not raise_error # WebMock::NetConnectNotAllowedError
+    end
+
+    it "should still allow me to make a mocked request" do
+      stub_request(:get, "www.example.com")
     end
   end
 end

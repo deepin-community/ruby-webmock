@@ -1,11 +1,20 @@
-Description: Remove patron adapter
- patron is unmaintained and removed from testing due to ftbfs.
-Author: Pirate Praveen <praveen@debian.org>
+From: Pirate Praveen <praveen@debian.org>
+Date: Wed, 17 Jul 2024 19:21:05 -0300
+Subject: Remove patron adapter
+
 Last-Update: 2019-09-15
 
+patron is unmaintained and removed from testing due to ftbfs.
+---
+ lib/webmock.rb      | 1 -
+ spec/spec_helper.rb | 1 -
+ 2 files changed, 2 deletions(-)
+
+diff --git a/lib/webmock.rb b/lib/webmock.rb
+index d9ffdc0..e82ac77 100644
 --- a/lib/webmock.rb
 +++ b/lib/webmock.rb
-@@ -48,7 +48,6 @@
+@@ -50,7 +50,6 @@ require_relative 'webmock/http_lib_adapters/http_lib_adapter'
  require_relative 'webmock/http_lib_adapters/net_http'
  require_relative 'webmock/http_lib_adapters/http_rb_adapter'
  require_relative 'webmock/http_lib_adapters/httpclient_adapter'
@@ -13,9 +22,11 @@ Last-Update: 2019-09-15
  require_relative 'webmock/http_lib_adapters/curb_adapter'
  require_relative 'webmock/http_lib_adapters/em_http_request_adapter'
  require_relative 'webmock/http_lib_adapters/typhoeus_hydra_adapter'
+diff --git a/spec/spec_helper.rb b/spec/spec_helper.rb
+index 9c7bc84..9508e6d 100644
 --- a/spec/spec_helper.rb
 +++ b/spec/spec_helper.rb
-@@ -2,7 +2,6 @@
+@@ -2,7 +2,6 @@ require 'rubygems'
  require 'httpclient'
  unless RUBY_PLATFORM =~ /java/
    require 'curb'

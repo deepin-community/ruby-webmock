@@ -13,6 +13,7 @@ end
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'rspec'
+require 'rspec/retry'
 
 require 'webmock/rspec'
 
@@ -20,6 +21,8 @@ require 'support/network_connection'
 require 'support/webmock_server'
 require 'support/my_rack_app'
 require 'support/failures'
+
+Warning[:deprecated] = true if Warning.respond_to?(:[]=)
 
 CURL_EXAMPLE_OUTPUT_PATH = File.expand_path('../support/example_curl_output.txt', __FILE__)
 

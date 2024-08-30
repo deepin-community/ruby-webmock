@@ -1,8 +1,15 @@
-Description: ignore whitespace test failures
-Author: Praveen Arimbrathodiyil <praveen@debian.org>
+From: Praveen Arimbrathodiyil <praveen@debian.org>
+Date: Wed, 17 Jul 2024 19:21:05 -0300
+Subject: ignore whitespace test failures
+
 Forwarded: no
 Last-Update: 2013-05-26
+---
+ spec/quality_spec.rb | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
+diff --git a/spec/quality_spec.rb b/spec/quality_spec.rb
+index d4cab11..e70cbd2 100644
 --- a/spec/quality_spec.rb
 +++ b/spec/quality_spec.rb
 @@ -61,9 +61,10 @@ describe "The library itself" do
