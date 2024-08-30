@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module WebMock
   class RequestStub
 
@@ -23,6 +25,38 @@ module WebMock
       self
     end
     alias_method :and_return, :to_return
+
+    def to_return_json(*response_hashes)
+      raise ArgumentError, '#to_return_json does not support passing a block' if block_given?
+
+      json_response_hashes = [*response_hashes].flatten.map do |resp_h|
+        headers, body = resp_h.values_at(:headers, :body)
+
+        json_body = if body.respond_to?(:call)
+          ->(request_signature) {
+            b = if body.respond_to?(:arity) && body.arity == 1
+              body.call(request_signature)
+            else
+              body.call
+            end
+            b = b.to_json unless b.is_a?(String)
+            b
+          }
+        elsif !body.is_a?(String)
+          body.to_json
+        else
+          body
+        end
+
+        resp_h.merge(
+          headers: {content_type: 'application/json'}.merge(headers.to_h),
+          body: json_body
+        )
+      end
+
+      to_return(json_response_hashes)
+    end
+    alias_method :and_return_json, :to_return_json
 
     def to_rack(app, options={})
       @responses_sequences << ResponsesSequence.new([RackResponse.new(app)])

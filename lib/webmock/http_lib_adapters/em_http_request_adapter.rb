@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 begin
   require 'em-http-request'
 rescue LoadError
@@ -99,6 +101,11 @@ if defined?(EventMachine::HttpClient)
         end
       end
 
+      def connection_completed
+        @state = :response_header
+        send_request(*headers_and_body_processed_by_middleware)
+      end
+
       def send_request(head, body)
         WebMock::RequestRegistry.instance.requested_signatures.put(request_signature)
 
@@ -149,7 +156,7 @@ if defined?(EventMachine::HttpClient)
         raw_cookie = response_header.cookie
         raw_cookie = [raw_cookie] if raw_cookie.is_a? String
 
-        cookie = raw_cookie.select { |c| c.start_with? name }.first
+        cookie = raw_cookie.detect { |c| c.start_with? name }
         cookie and cookie.split('=', 2)[1]
       end
 
@@ -163,12 +170,18 @@ if defined?(EventMachine::HttpClient)
         webmock_response
       end
 
-      def build_request_signature
-        headers, body = @req.headers, @req.body
-
-        @conn.middleware.select {|m| m.respond_to?(:request) }.each do |m|
-          headers, body = m.request(self, headers, body)
+      def headers_and_body_processed_by_middleware
+        @headers_and_body_processed_by_middleware ||= begin
+          head, body = build_request, @req.body
+          @conn.middleware.each do |m|
+            head, body = m.request(self, head, body) if m.respond_to?(:request)
+          end
+          [head, body]
         end
+      end
+
+      def build_request_signature
+        headers, body = headers_and_body_processed_by_middleware
 
         method = @req.method
         uri = @req.uri.clone
@@ -177,8 +190,6 @@ if defined?(EventMachine::HttpClient)
         uri.query = encode_query(@req.uri, query).slice(/\?(.*)/, 1)
 
         body = form_encode_body(body) if body.is_a?(Hash)
-
-        headers = @req.headers
 
         if headers['authorization'] && headers['authorization'].is_a?(Array)
           headers['Authorization'] = WebMock::Util::Headers.basic_auth_header(headers.delete('authorization'))

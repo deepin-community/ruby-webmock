@@ -111,6 +111,21 @@ describe WebMock::RequestPattern do
         to match(WebMock::RequestSignature.new(:get, "www.example.com"))
     end
 
+    it "should match if uri matches requesst uri as URI object" do
+      expect(WebMock::RequestPattern.new(:get, URI.parse("www.example.com"))).
+        to match(WebMock::RequestSignature.new(:get, "www.example.com"))
+    end
+
+    it "should match if uri proc pattern returning true" do
+      expect(WebMock::RequestPattern.new(:get, ->(uri) { true })).
+        to match(WebMock::RequestSignature.new(:get, "www.example.com"))
+    end
+
+    it "should not match if uri proc pattern returns false" do
+      expect(WebMock::RequestPattern.new(:get, ->(uri) { false })).
+        not_to match(WebMock::RequestSignature.new(:get, "www.example.com"))
+    end
+
     it "should match if uri Addressable::Template pattern matches unescaped form of request uri" do
       expect(WebMock::RequestPattern.new(:get, Addressable::Template.new("www.example.com/{any_path}"))).
         to match(WebMock::RequestSignature.new(:get, "www.example.com/my%20path"))
@@ -132,6 +147,12 @@ describe WebMock::RequestPattern do
       expect(WebMock::RequestPattern.new(:get, uri)).to match(signature)
     end
 
+    it "should match if Addressable::Template pattern that has ip address host without port matches request uri" do
+      signature = WebMock::RequestSignature.new(:get, "127.0.0.1/1234")
+      uri = Addressable::Template.new("127.0.0.1/{id}")
+      expect(WebMock::RequestPattern.new(:get, uri)).to match(signature)
+    end
+
     it "should match if Addressable::Template pattern host matches request uri" do
       signature = WebMock::RequestSignature.new(:get, "www.example.com")
       uri = Addressable::Template.new("{subdomain}.example.com")
@@ -142,6 +163,12 @@ describe WebMock::RequestPattern do
       signature = WebMock::RequestSignature.new(:get, "www.bad-example.com")
       uri = Addressable::Template.new("{subdomain}.example.com")
       expect(WebMock::RequestPattern.new(:get, uri)).not_to match(signature)
+    end
+
+    it "should match if uri Addressable::Template pattern matches request uri without a schema and a path " do
+      signature = WebMock::RequestSignature.new(:get, "127.0.0.1:3000")
+      uri = Addressable::Template.new("127.0.0.1:3000")
+      expect(WebMock::RequestPattern.new(:get, uri)).to match(signature)
     end
 
     it "should match for uris with same parameters as pattern" do
@@ -211,7 +238,7 @@ describe WebMock::RequestPattern do
             to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c"))
         end
 
-        it "should match request query params if params don't match" do
+        it "should not match request query params if params don't match" do
           expect(WebMock::RequestPattern.new(:get, /.*example.*/, query: {"x" => ["b", "c"]})).
             not_to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c"))
         end
@@ -241,13 +268,85 @@ describe WebMock::RequestPattern do
         end
       end
 
+      describe "when uri is described as URI" do
+        it "should match request query params" do
+          expect(WebMock::RequestPattern.new(:get, URI.parse("www.example.com"), query: {"a" => ["b", "c"]})).
+            to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c"))
+        end
+
+        it "should not match request query params if params don't match" do
+          expect(WebMock::RequestPattern.new(:get, URI.parse("www.example.com"), query: {"x" => ["b", "c"]})).
+            not_to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c"))
+        end
+
+        it "should match when query params are declared as HashIncluding matcher matching params" do
+          expect(WebMock::RequestPattern.new(:get, URI.parse("www.example.com"),
+          query: WebMock::Matchers::HashIncludingMatcher.new({"a" => ["b", "c"]}))).
+            to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c&b=1"))
+        end
+
+        it "should not match when query params are declared as HashIncluding matcher not matching params" do
+          expect(WebMock::RequestPattern.new(:get, URI.parse("www.example.com"),
+          query: WebMock::Matchers::HashIncludingMatcher.new({"x" => ["b", "c"]}))).
+            not_to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c&b=1"))
+        end
+
+        it "should match when query params are declared as RSpec HashIncluding matcher matching params" do
+          expect(WebMock::RequestPattern.new(:get, URI.parse("www.example.com"),
+          query: RSpec::Mocks::ArgumentMatchers::HashIncludingMatcher.new({"a" => ["b", "c"]}))).
+            to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c&b=1"))
+        end
+
+        it "should not match when query params are declared as RSpec HashIncluding matcher not matching params" do
+          expect(WebMock::RequestPattern.new(:get, URI.parse("www.example.com"),
+          query: RSpec::Mocks::ArgumentMatchers::HashIncludingMatcher.new({"a" => ["b", "d"]}))).
+            not_to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c&b=1"))
+        end
+      end
+
+      describe "when uri is described as a proc" do
+        it "should match request query params" do
+          expect(WebMock::RequestPattern.new(:get, ->(uri) { true }, query: {"a" => ["b", "c"]})).
+            to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c"))
+        end
+
+        it "should not match request query params if params don't match" do
+          expect(WebMock::RequestPattern.new(:get, ->(uri) { true }, query: {"x" => ["b", "c"]})).
+            not_to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c"))
+        end
+
+        it "should match when query params are declared as HashIncluding matcher matching params" do
+          expect(WebMock::RequestPattern.new(:get, ->(uri) { true },
+          query: WebMock::Matchers::HashIncludingMatcher.new({"a" => ["b", "c"]}))).
+            to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c&b=1"))
+        end
+
+        it "should not match when query params are declared as HashIncluding matcher not matching params" do
+          expect(WebMock::RequestPattern.new(:get, ->(uri) { true },
+          query: WebMock::Matchers::HashIncludingMatcher.new({"x" => ["b", "c"]}))).
+            not_to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c&b=1"))
+        end
+
+        it "should match when query params are declared as RSpec HashIncluding matcher matching params" do
+          expect(WebMock::RequestPattern.new(:get, ->(uri) { true },
+          query: RSpec::Mocks::ArgumentMatchers::HashIncludingMatcher.new({"a" => ["b", "c"]}))).
+            to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c&b=1"))
+        end
+
+        it "should not match when query params are declared as RSpec HashIncluding matcher not matching params" do
+          expect(WebMock::RequestPattern.new(:get, ->(uri) { true },
+          query: RSpec::Mocks::ArgumentMatchers::HashIncludingMatcher.new({"a" => ["b", "d"]}))).
+            not_to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c&b=1"))
+        end
+      end
+
       describe "when uri is described as Addressable::Template" do
         it "should raise error if query params are specified" do
           expect(WebMock::RequestPattern.new(:get, Addressable::Template.new("www.example.com"), query: {"a" => ["b", "c"]})).
             to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c"))
         end
 
-        it "should match request query params if params don't match" do
+        it "should not match request query params if params don't match" do
           expect(WebMock::RequestPattern.new(:get, Addressable::Template.new("www.example.com"), query: {"x" => ["b", "c"]})).
             not_to match(WebMock::RequestSignature.new(:get, "www.example.com?a[]=b&a[]=c"))
         end
@@ -435,69 +534,105 @@ describe WebMock::RequestPattern do
         end
 
         describe "for request with json body and content type is set to json" do
-          it "should match when hash matches body" do
-            expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
-              to match(WebMock::RequestSignature.new(:post, "www.example.com", headers: {content_type: 'application/json'},
-                                                         body: "{\"a\":\"1\",\"c\":{\"d\":[\"e\",\"f\"]},\"b\":\"five\"}"))
-              end
+          shared_examples "a json body" do
+            it "should match when hash matches body" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
+                to match(WebMock::RequestSignature.new(:post, "www.example.com", headers: {content_type: content_type},
+                                                           body: "{\"a\":\"1\",\"c\":{\"d\":[\"e\",\"f\"]},\"b\":\"five\"}"))
+                end
 
-          it "should match if hash matches body in different form" do
-            expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
-              to match(WebMock::RequestSignature.new(:post, "www.example.com", headers: {content_type: 'application/json'},
-                                                         body: "{\"a\":\"1\",\"b\":\"five\",\"c\":{\"d\":[\"e\",\"f\"]}}"))
-              end
+            it "should match if hash matches body in different form" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
+                to match(WebMock::RequestSignature.new(:post, "www.example.com", headers: {content_type: content_type},
+                                                           body: "{\"a\":\"1\",\"b\":\"five\",\"c\":{\"d\":[\"e\",\"f\"]}}"))
+                end
 
-          it "should not match when body is not json" do
-            expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
-              not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
-                                                             headers: {content_type: 'application/json'}, body: "foo bar"))
+            it "should match if the request body has a top level array" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: [{a: 1}])).
+                to match(WebMock::RequestSignature.new(:post, "www.example.com",
+                headers: {content_type: content_type}, body: "[{\"a\":1}]"))
+            end
+
+            it "should not match if the request body has a different top level array" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: ["a", "b"])).
+                not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
+                headers: {content_type: content_type}, body: "[\"a\", \"c\"]"))
+            end
+
+            it "should not match when body is not json" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
+                not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
+                                                               headers: {content_type: content_type}, body: "foo bar"))
+            end
+
+            it "should not match if request body is different" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: {a: 1, b: 2})).
+                not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
+                headers: {content_type: content_type}, body: "{\"a\":1,\"c\":null}"))
+            end
+
+            it "should not match if request body is has less params than pattern" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: {a: 1, b: 2})).
+                not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
+                headers: {content_type: content_type}, body: "{\"a\":1}"))
+            end
+
+            it "should not match if request body is has more params than pattern" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: {a: 1})).
+                not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
+                headers: {content_type: content_type}, body: "{\"a\":1,\"c\":1}"))
+            end
           end
 
-          it "should not match if request body is different" do
-            expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: {a: 1, b: 2})).
-              not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
-              headers: {content_type: 'application/json'}, body: "{\"a\":1,\"c\":null}"))
+          context "standard application/json" do
+            let(:content_type) { 'application/json' }
+            it_behaves_like "a json body"
           end
 
-          it "should not match if request body is has less params than pattern" do
-            expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: {a: 1, b: 2})).
-              not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
-              headers: {content_type: 'application/json'}, body: "{\"a\":1}"))
-          end
-
-          it "should not match if request body is has more params than pattern" do
-            expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: {a: 1})).
-              not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
-              headers: {content_type: 'application/json'}, body: "{\"a\":1,\"c\":1}"))
+          context "custom json content type" do
+            let(:content_type) { 'application/vnd.api+json' }
+            it_behaves_like "a json body"
           end
         end
 
         describe "for request with xml body and content type is set to xml" do
           let(:body_hash) { {"opt" => {:a => '1', :b => 'five', 'c' => {'d' => ['e', 'f']}}} }
 
-          it "should match when hash matches body" do
-            expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
-              to match(WebMock::RequestSignature.new(:post, "www.example.com", headers: {content_type: 'application/xml'},
-                                                         body: "<opt a=\"1\" b=\"five\">\n  <c>\n    <d>e</d>\n    <d>f</d>\n  </c>\n</opt>\n"))
-              end
+          shared_examples "a xml body" do
+            it "should match when hash matches body" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
+                to match(WebMock::RequestSignature.new(:post, "www.example.com", headers: {content_type: content_type},
+                                                           body: "<opt a=\"1\" b=\"five\">\n  <c>\n    <d>e</d>\n    <d>f</d>\n  </c>\n</opt>\n"))
+                end
 
-          it "should match if hash matches body in different form" do
-            expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
-              to match(WebMock::RequestSignature.new(:post, "www.example.com", headers: {content_type: 'application/xml'},
-                                                         body: "<opt b=\"five\" a=\"1\">\n  <c>\n    <d>e</d>\n    <d>f</d>\n  </c>\n</opt>\n"))
-              end
+            it "should match if hash matches body in different form" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
+                to match(WebMock::RequestSignature.new(:post, "www.example.com", headers: {content_type: content_type},
+                                                           body: "<opt b=\"five\" a=\"1\">\n  <c>\n    <d>e</d>\n    <d>f</d>\n  </c>\n</opt>\n"))
+                end
 
-          it "should not match when body is not xml" do
-            expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
-              not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
-                                                             headers: {content_type: 'application/xml'}, body: "foo bar"))
-              end
+            it "should not match when body is not xml" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
+                not_to match(WebMock::RequestSignature.new(:post, "www.example.com",
+                                                               headers: {content_type: content_type}, body: "foo bar"))
+                end
 
-          it "matches when the content type include a charset" do
-            expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
-              to match(WebMock::RequestSignature.new(:post, "www.example.com", headers: {content_type: 'application/xml;charset=UTF-8'},
-                                                         body: "<opt a=\"1\" b=\"five\">\n  <c>\n    <d>e</d>\n    <d>f</d>\n  </c>\n</opt>\n"))
+            it "matches when the content type include a charset" do
+              expect(WebMock::RequestPattern.new(:post, 'www.example.com', body: body_hash)).
+                to match(WebMock::RequestSignature.new(:post, "www.example.com", headers: {content_type: "#{content_type};charset=UTF-8"},
+                                                           body: "<opt a=\"1\" b=\"five\">\n  <c>\n    <d>e</d>\n    <d>f</d>\n  </c>\n</opt>\n"))
 
+            end
+          end
+
+          context "standard application/xml" do
+            let(:content_type) { 'application/xml' }
+            it_behaves_like "a xml body"
+          end
+
+          context "custom xml content type" do
+            let(:content_type) { 'application/atom+xml' }
+            it_behaves_like "a xml body"
           end
         end
       end

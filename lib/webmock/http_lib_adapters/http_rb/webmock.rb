@@ -1,7 +1,10 @@
+# frozen_string_literal: true
+
 module HTTP
   class WebMockPerform
-    def initialize(request, &perform)
+    def initialize(request, options, &perform)
       @request = request
+      @options = options
       @perform = perform
       @request_signature = nil
     end
@@ -38,7 +41,10 @@ module HTTP
       webmock_response.raise_error_if_any
 
       invoke_callbacks(webmock_response, real_request: false)
-      ::HTTP::Response.from_webmock webmock_response, request_signature
+      response = ::HTTP::Response.from_webmock @request, webmock_response, request_signature
+
+      @options.features.each { |_name, feature| response = feature.wrap_response(response) }
+      response
     end
 
     def raise_timeout_error

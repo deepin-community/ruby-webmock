@@ -1,5 +1,321 @@
 # Changelog
 
+# 3.23.1
+
+* Added support for async-http version >= 0.65.0 [PR](https://github.com/bblimke/webmock/pull/1056)
+
+    Thanks to [Jacob Frautschi](https://github.com/jakeonfire)
+
+# 3.23.0
+
+ * Fixed HTTP.rb adapter to support streaming real responses when WebMock is enabled.
+
+    Thanks to [Viacheslav Nepomniashchikh](https://github.com/aka-nez) for reporting and investigating this [issue](https://github.com/bblimke/webmock/issues/1017).
+
+# 3.22.0
+
+  * Addressed an issue in the HTTPClient adapter where memoized stubbed responses and memoized request_signatures were incorrectly persisted between subsequent requests ([#1019](https://github.com/bblimke/webmock/issues/1019)). The implementation of a more robust thread-safety solution by [Tom Beauvais](https://github.com/tbeauvais) in [PR #300](https://github.com/bblimke/webmock/pull/300) not only resolved the memoization problem but also enhanced the overall thread safety of the adapter. This update ensures that stubbed responses and request signatures are correctly isolated to individual requests, improving both consistency and thread safety.
+
+# 3.21.2
+
+  * Corrected type checking in `WebMock::Response#assert_valid_body!` to accurately recognize `Hash` objects. Additionally, improved the clarity of the error message for unsupported body types, guiding users towards proper usage.
+
+    Thanks to [Jake Robb](https://github.com/jakerobb) for reporting.
+
+# 3.21.1
+
+  * The stubbed Net::HTTPResponse#uri now returns request.uri, aligning it with the behavior of an actual Net::HTTPResponse.
+
+    Thanks to [Abe Voelker](https://github.com/abevoelker) for reporting and to [Victor Maslov](https://github.com/Nakilon) and [Gio Lodi](https://github.com/mokagio) for the suggested solution.
+
+# 3.21.0
+
+  * Don't use deprecated Rack::VERSION for Rack >= 3
+
+    Thanks to [Étienne Barrié](https://github.com/etiennebarrie)
+
+  * Updated HTTPClient adapter, to build request signature using the URI after filters have been applied.
+
+    Thanks to [Matt Brown](https://github.com/mattbnz)
+
+# 3.20.0
+
+  * Optimised EmHttpRequestAdapter performance.
+
+    Thanks to [Ricardo Trindade](https://github.com/RicardoTrindade)
+
+  * Removed runtime dependency on base64.
+
+    Thanks to [Earlopain](https://github.com/Earlopain)
+
+  * Typhoeus::Response objects constructed from stubbed responses now have all timing attributes set to 0.0.
+
+    Thanks to [James Brown](https://github.com/Roguelazer)
+
+  * Optimised WebMock::Util::Headers by removing redundant freeze invocations.
+
+    Thanks to [Kazuhiro NISHIYAMA](https://github.com/znz)
+
+  * The default stubbed response body, which is an empty String, is unfrozen.
+
+  * When building signatures of requests made by http.rb, the request body encoding is now preserved.
+
+# 3.19.1
+
+  * When passing a Proc or lambda as response body to `to_return_json`, the body is evaluated at the time of request and not at the time of `to_return_json` method invocation.
+
+      Thanks to [Jason Karns](https://github.com/jasonkarns) for reporting.
+
+# 3.19.0
+
+  * Do not alter real (non-stubbed) request headers when handling em-http-request requests.
+
+      Thanks to [Yoann Lecuyer](https://github.com/ylecuyer)
+
+  * Fix matching stubs with HashExcludingMatcher
+
+      Thanks to [Lucas Arnaud](https://github.com/lucasarnaud)
+
+  * Remove development and test files from the gem package
+
+      Thanks to [Orien Madgwick](https://github.com/orien)
+
+  * Fix supported http client gem version checks.
+
+      Thanks to [Marc Rohloff](https://github.com/marcrohloff) and [Roman Stražanec](https://github.com/romanstrazanec)
+
+  * Non-string body passed to #to_return_json is now converted to JSON string.
+
+      Thanks to [inkstak](https://github.com/inkstak)
+
+  * `[::1]` is recognised as localhost e.g when passing `allow_localhost` option to `disable_net_connect!`
+
+      Thanks to [Yuki Inoue](https://github.com/Yuki-Inoue)
+
+  * Optimized `normalize_headers` for performance
+
+      Thanks to [Brandon Weaver](https://github.com/baweaver)
+
+  * Added Frozen string literal to files to optimise memory usage
+
+      Thanks to [Josh Nichols](https://github.com/technicalpickles)
+
+# 3.18.1
+
+  * Reverted simplified connection handing in Net::HTTP adapter due to https://github.com/bblimke/webmock/issues/999
+
+# 3.18.0
+
+  * Net::BufferedIO is not replaced anymore.
+
+    Thanks to [Ray Zane](https://github.com/rzane)
+
+  * Simplified connection handing in Net::HTTP adapter.
+
+    Thanks to [Ray Zane](https://github.com/rzane)
+
+# 3.17.1
+
+  * Fixed Syntax Error
+
+    Thanks to [Mark Spangler](https://github.com/mspangler)
+
+# 3.17.0
+
+  * Minimum required Ruby version is 2.3
+
+    Thanks to [Go Sueyoshi](https://github.com/sue445)
+
+  * When using Net::HTTP, stubbed socket StubSocket#close and StubSocket#closed? behave more like the real sockets.
+
+    Thanks to [Ray Zane](https://github.com/rzane)
+
+  * Added `peeraddr`, `ssl_version` and `cipher` methods to stubbed sockets used by Net::HTTP.
+
+    Thanks to [Ray Zane](https://github.com/rzane)
+
+  * Added support for matching top-level array in JSON request body.
+
+    E.g.
+
+      ````
+      stub_request(:post, 'www.example.com').with(body: [{a: 1}])
+      ````
+
+    Thanks to [Cedric Sohrauer](https://github.com/cedrics)
+
+# 3.16.2
+
+  * Minimum required Ruby version is 2.0.
+
+# 3.16.0 (yanked)
+
+  * Fix leaky file descriptors and reuse socket for persistent connections.
+
+    Thanks to [Ray Zane](https://github.com/rzane)
+
+  * Allow specifying for what URIs or hosts, Net::HTTP should connect on start.
+
+    Thanks to [Ray Zane](https://github.com/rzane)
+
+# 3.15.2
+
+  * Minimum required Ruby version is 2.0.
+
+# 3.15.0 (yanked)
+
+  * fixed async-http adapter on Windows
+
+    Thanks to [Pavel Rosický](https://github.com/ahorek)
+
+  * Support for http.rb >= 5.0.2
+
+    Thanks to [ojab](https://github.com/ojab)
+
+  * Curb adapter supports headers with `:` character in the header value
+
+    Thanks to [Giorgio Gambino](https://github.com/mrbuzz)
+
+  * Support for matching body of JSON or application/x-www-form-urlencoded requests with content type header including charset.
+
+    Thanks to [Timmitry](https://github.com/Timmitry)
+
+  * Prevent double-wrapping http.rb features on non-stubbed requests
+
+    Thanks to [Michael Fairley](https://github.com/michaelfairley)
+
+# 3.14.0
+
+  * Bump Addressable from 2.3.6 to 2.8.0
+
+    Thanks to [Eduardo Hernandez](https://github.com/EduardoGHdez)
+
+# 3.13.0
+
+  * Support http.rb 5.x
+
+    Thanks to [Will Storey](https://github.com/horgh)
+
+# 3.12.2
+
+  * Fixed em-http-request adapter to avoid calling middleware twice.
+
+    Thanks to [Alex Vondrak](https://github.com/ajvondrak)
+
+# 3.12.1
+
+  * Fixed handling of URIs with IPv6 addresses with square brackets when in Net::HTTP adapter.
+
+    Thanks to [Johanna Hartmann](https://github.com/JohannaHartmann)
+
+# 3.12.0
+
+  * Added support for handling custom JSON and XML content types e.g. 'application/vnd.api+json'
+
+# 3.11.3
+
+  * Fixed async-http adapter to only considered requests as real if they are real.
+
+    Thanks to [Tony Schneider](https://github.com/tonywok) and [Samuel Williams](https://github.com/ioquatix)
+
+# 3.11.2
+
+  * Fix for Manticore streaming mode
+
+    Thanks to [Oleksiy Kovyrin](https://github.com/kovyrin)
+
+# 3.11.1
+
+  * Compatibility with async-http 0.54+
+
+    Thanks to [Jun Jiang](https://github.com/jasl)
+
+# 3.11.0
+
+  * Added support for `features` in http.rb adapter.
+
+    Thanks to [Carl (ce07c3)](https://github.com/ce07c3)
+
+# 3.10.0
+
+  * Added option to global stubs to have lower priority than local stubs.
+
+        WebMock.globally_stub_request(:after_local_stubs) do
+          { body: "global stub body" }
+        end
+
+        stub_request(:get, "www.example.com").to_return(body: 'non-global stub body')
+
+        expect(http_request(:get, "http://www.example.com/").body).to eq("non-global stub body")
+
+    Thanks to [Marek Kasztelnik](https://github.com/mkasztelnik)
+
+# 3.9.5
+
+  * Prevent overwriting `teardown` method in Test::Unit
+
+    Thanks to [Jesse Bowes](https://github.com/jessebs)
+
+# 3.9.4
+
+  * More intuitive error message when stubbed response body was provided as Hash
+
+    Thanks to [Ben Koshy](https://github.com/BKSpurgeon)
+
+# 3.9.3
+
+  * Make httpclient_adapter thread-safe
+
+    Thanks to [Adam Harwood](https://github.com/adam-harwood)
+
+# 3.9.2
+
+  * Made global stubs thread-safe
+
+    Thanks to [Adam Harwood](https://github.com/adam-harwood)
+
+# 3.9.1
+
+  * Fixed support for passing `URI` objects as second argument of `stub_request`
+
+    Thanks to [Ryan Kerr](https://github.com/leboshi)
+
+## 3.9.0
+
+  * Allow using a "callable" (like a proc) as URI pattern
+
+        stub_request(:any, ->(uri) { true })
+
+    Thanks to [John Hawthorn](https://github.com/jhawthorn)
+
+  * Added stubbed IO on stubbed socket in Net::HTTP adapter.
+
+    Thanks to [Thilo Rusche](https://github.com/trusche)
+
+  * When 'webmock/rspec' is required, reset WebMock after all after(:each/example) hooks
+
+    Thanks to [Andrew Stuntz](https://github.com/drews256)
+
+  * Fixed `net_connect_allowed?` when invoked with no arguments, when there were any allowed URIs passed to `disable_net_connect?`.
+
+    Thanks to [Lucas Uyezu](https://github.com/lucasuyezu)
+
+  * Fixed async-http adapter which caused Async::HTTP::Client or Async::HTTP::Internet to hang and never return a response.
+
+    Thanks to [Bruno Sutic](https://github.com/bruno-) and [Samuel Williams](https://github.com/ioquatix)
+
+  * Fixed warning when using async-http adapter
+
+    Thanks to [Bruno Sutic](https://github.com/bruno-)
+
+  * Dropped support for Ruby 2.3 - EOL date: 2019-03-31
+
+  * Dropped support for Ruby 2.4 - EOL date: 2020-03-31
+
+  * Handling matching of Addressable::Template patterns that have an ip address without port and patterns that have ip address and don’t have schema and path.
+
+    Thanks to [Rafael França](https://github.com/rafaelfranca) and [guppy0356](https://github.com/guppy0356)
+
 ## 3.8.3
 
   * Fixed problem introduced in version 3.4.2, which caused matching against Addressable::Template representing host part of the URI to raise an error.
@@ -473,9 +789,9 @@
   * `WebMock.disable_net_connect` accepts `:allow` option with an object that responds to `#call`, receiving a `URI` object and returning a boolean:
 
 
-        blacklist = ['google.com', 'facebook.com', 'apple.com']
+        denylist = ['google.com', 'facebook.com', 'apple.com']
         allowed_sites = lambda{|uri|
-          blacklist.none?{|site| uri.host.include?(site) }
+          denylist.none?{|site| uri.host.include?(site) }
         }
         WebMock.disable_net_connect!(:allow => allowed_sites)
 

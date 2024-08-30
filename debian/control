@@ -1,40 +1,37 @@
 Source: ruby-webmock
 Section: ruby
 Priority: optional
-Maintainer: Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>
+Maintainer: Debian Ruby Team <pkg-ruby-extras-maintainers@lists.alioth.debian.org>
 Uploaders: Pirate Praveen <praveen@debian.org>
-Build-Depends: debhelper-compat (= 12),
+Build-Depends: debhelper-compat (= 13),
                gem2deb (>= 1),
                rake,
-               ruby-addressable (>= 2.3.6),
-               ruby-crack (>= 0.3.2),
+               ruby-addressable,
+               ruby-crack,
                ruby-curb,
-               ruby-em-http-request (>= 1.1.2),
+               ruby-em-http-request,
                ruby-em-socksify,
-               ruby-escape-utils (>= 1.0.1),
-               ruby-eventmachine (>= 1.0.3-6),
-               ruby-excon (>= 0.27.5~),
-               ruby-hashdiff (>= 0.4~),
+               ruby-escape-utils,
+               ruby-eventmachine,
+               ruby-excon,
+               ruby-hashdiff,
                ruby-http,
                ruby-httpclient,
                ruby-minitest,
                ruby-rack,
                ruby-rspec,
-               ruby-safe-yaml,
+               ruby-rspec-retry,
                ruby-test-unit,
-               ruby-typhoeus,
-	       ruby-webrick
-Standards-Version: 4.4.0
+               ruby-typhoeus
+Standards-Version: 4.7.0
 Vcs-Git: https://salsa.debian.org/ruby-team/ruby-webmock.git
 Vcs-Browser: https://salsa.debian.org/ruby-team/ruby-webmock
 Homepage: https://github.com/bblimke/webmock
 Testsuite: autopkgtest-pkg-ruby
-XS-Ruby-Versions: all
 Rules-Requires-Root: no
 
 Package: ruby-webmock
 Architecture: all
-XB-Ruby-Versions: ${ruby:Versions}
 Depends: ${misc:Depends},
          ${ruby:Depends},
          ${shlibs:Depends}

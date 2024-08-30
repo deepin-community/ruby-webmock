@@ -3,11 +3,11 @@ require 'spec_helper'
 require 'acceptance/webmock_shared'
 require_relative './async_http_client_spec_helper'
 
-require 'protocol/http/body/file'
-
-Async.logger.debug! if ENV['ASYNC_LOGGER_DEBUG']
-
 unless RUBY_PLATFORM =~ /java/
+  require 'protocol/http/body/file'
+
+  Async.logger.debug! if ENV['ASYNC_LOGGER_DEBUG']
+
   describe 'Async::HTTP::Client' do
     include AsyncHttpClientSpecHelper
 
@@ -135,7 +135,31 @@ unless RUBY_PLATFORM =~ /java/
       expect { make_request(:get, 'http://www.example.com') }.to raise_error Async::TimeoutError
     end
 
+    it 'does not invoke "after real request" callbacks for stubbed requests' do
+      WebMock.allow_net_connect!
+      stub_request(:get, 'http://www.example.com').to_return(body: 'abc')
+
+      callback_invoked = false
+      WebMock.after_request(real_requests_only: true) { |_| callback_invoked = true }
+
+      make_request(:get, 'http://www.example.com')
+      expect(callback_invoked).to eq(false)
+    end
+
+    it 'does invoke "after request" callbacks for stubbed requests' do
+      WebMock.allow_net_connect!
+      stub_request(:get, 'http://www.example.com').to_return(body: 'abc')
+
+      callback_invoked = false
+      WebMock.after_request(real_requests_only: false) { |_| callback_invoked = true }
+
+      make_request(:get, 'http://www.example.com')
+      expect(callback_invoked).to eq(true)
+    end
+
     context 'scheme and protocol' do
+      let(:default_response_headers) { {} }
+
       before do
         stub_request(
           :get, "#{scheme}://www.example.com"
@@ -152,7 +176,7 @@ unless RUBY_PLATFORM =~ /java/
         specify do
           expect(subject).to eq(
             status: 200,
-            headers: {},
+            headers: default_response_headers,
             body: 'BODY'
           )
         end
@@ -169,6 +193,7 @@ unless RUBY_PLATFORM =~ /java/
 
         context 'HTTP10 protocol' do
           let(:protocol) { Async::HTTP::Protocol::HTTP10 }
+          let(:default_response_headers) { {"connection"=>["keep-alive"]} }
 
           include_examples :common
         end
@@ -197,6 +222,7 @@ unless RUBY_PLATFORM =~ /java/
 
         context 'HTTP10 protocol' do
           let(:protocol) { Async::HTTP::Protocol::HTTP10 }
+          let(:default_response_headers) { {"connection"=>["keep-alive"]} }
 
           include_examples :common
         end
@@ -222,7 +248,7 @@ unless RUBY_PLATFORM =~ /java/
     end
 
     context 'multiple requests' do
-      let(:endpoint) { Async::HTTP::Endpoint.parse('http://www.example.com') }
+      let!(:endpoint) { Async::HTTP::Endpoint.parse('http://www.example.com') }
       let(:requests_count) { 3 }
 
       shared_examples :common do
@@ -274,13 +300,13 @@ unless RUBY_PLATFORM =~ /java/
         end
 
         context 'HTTP1 protocol' do
-          let(:protocol) { Async::HTTP::Protocol::HTTP1 }
+          let!(:protocol) { Async::HTTP::Protocol::HTTP1 }
 
           include_examples :common
         end
 
         context 'HTTP2 protocol' do
-          let(:protocol) { Async::HTTP::Protocol::HTTP2 }
+          let!(:protocol) { Async::HTTP::Protocol::HTTP2 }
 
           include_examples :common
         end
@@ -305,13 +331,13 @@ unless RUBY_PLATFORM =~ /java/
         end
 
         context 'HTTP1 protocol' do
-          let(:protocol) { Async::HTTP::Protocol::HTTP1 }
+          let!(:protocol) { Async::HTTP::Protocol::HTTP1 }
 
           include_examples :common
         end
 
         context 'HTTP2 protocol' do
-          let(:protocol) { Async::HTTP::Protocol::HTTP2 }
+          let!(:protocol) { Async::HTTP::Protocol::HTTP2 }
 
           include_examples :common
         end
@@ -319,7 +345,7 @@ unless RUBY_PLATFORM =~ /java/
     end
 
     def make_request(method, url, protocol: nil, headers: {}, body: nil)
-      Async do
+      result  = Async do
         endpoint = Async::HTTP::Endpoint.parse(url)
 
         begin
@@ -336,6 +362,8 @@ unless RUBY_PLATFORM =~ /java/
           e
         end
       end.wait
+
+      result.is_a?(Exception) ? raise(result) : result
     end
 
     def response_to_hash(response)

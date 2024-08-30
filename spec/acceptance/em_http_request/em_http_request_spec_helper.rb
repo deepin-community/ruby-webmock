@@ -16,7 +16,7 @@ module EMHttpRequestSpecHelper
     error_set = false
     uri = Addressable::URI.heuristic_parse(uri)
     EventMachine.run {
-      request = EventMachine::HttpRequest.new("#{uri.normalize.to_s}")
+      request = EventMachine::HttpRequest.new("#{uri.normalize.to_s}", ssl: {verify_peer: true})
       http = request.send(method, {
         timeout: 30,
         body: options[:body],
@@ -50,11 +50,14 @@ module EMHttpRequestSpecHelper
   end
 
   def client_timeout_exception_class
-    'Errno::ETIMEDOUT'
+    RuntimeError # 'Errno::ETIMEDOUT'
   end
 
   def connection_refused_exception_class
     RuntimeError
+  end
+
+  def connection_error_class
   end
 
   def http_library

@@ -1,15 +1,50 @@
-ruby-webmock (3.8.3-2) UNRELEASED; urgency=medium
+ruby-webmock (3.23.1-1) unstable; urgency=medium
 
-  * update
+  * Team upload.
+  * New upstream release.
+  * Update patches.
+  * Declare compliance with Debian Policy 4.7.0.
+  * Add ruby-rspec-retry as a b-d.
 
- -- Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>  Thu, 21 Jul 2022 17:53:50 +0800
+ -- Lucas Kanashiro <kanashiro@debian.org>  Wed, 17 Jul 2024 19:29:56 -0300
+
+ruby-webmock (3.18.1-2) unstable; urgency=medium
+
+  * Team upload.
+  * Add patch to skip tests requiring Internet connection. Those tests are
+    failing in the Ubuntu builders.
+
+ -- Lucas Kanashiro <kanashiro@debian.org>  Tue, 07 Feb 2023 09:21:29 -0300
+
+ruby-webmock (3.18.1-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream version 3.18.1
+  * Drop patch rspec.patch (was from upstream)
+  * Refresh packaging using dh-make-ruby -w
+
+ -- Lucas Nussbaum <lucas@debian.org>  Sun, 01 Jan 2023 09:40:28 +0100
+
+ruby-webmock (3.8.3-3) unstable; urgency=medium
+
+  * Team Upload.
+  * Cherry-pick upstream patch to fix FTBFS with rspec (Closes: #1027096)
+
+ -- Nilesh Patra <nilesh@debian.org>  Wed, 28 Dec 2022 18:42:18 +0530
 
 ruby-webmock (3.8.3-2) unstable; urgency=medium
 
-  * add make depend: ruby-webrick
-  * update version.
+  * Team upload
 
- -- wangxiangyu <wangxiangyu@uniontech.com>  Thu, 21 Jul 2022 17:52:56 -0300
+  [ Debian Janitor ]
+  * Bump debhelper from old 12 to 13.
+  * Set upstream metadata fields: Bug-Submit.
+  * Update standards version to 4.5.1, no changes needed.
+
+  [ Antonio Terceiro ]
+  * Drop build dependency on ruby-safe-yaml
+
+ -- Antonio Terceiro <terceiro@debian.org>  Mon, 12 Dec 2022 22:06:58 -0300
 
 ruby-webmock (3.8.3-1) unstable; urgency=medium
 

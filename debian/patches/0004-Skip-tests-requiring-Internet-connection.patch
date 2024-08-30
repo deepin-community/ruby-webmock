@@ -1,0 +1,31 @@
+From: Lucas Kanashiro <kanashiro@ubuntu.com>
+Date: Tue, 7 Feb 2023 09:19:17 -0300
+Subject: Skip tests requiring Internet connection
+
+Forwarded: not-needed
+---
+ spec/acceptance/net_http/net_http_shared.rb | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/spec/acceptance/net_http/net_http_shared.rb b/spec/acceptance/net_http/net_http_shared.rb
+index 9ab3379..1e18838 100644
+--- a/spec/acceptance/net_http/net_http_shared.rb
++++ b/spec/acceptance/net_http/net_http_shared.rb
+@@ -51,7 +51,7 @@ shared_examples_for "Net::HTTP" do
+       end
+     end
+ 
+-    it "should allow sending multiple requests when persisted", net_connect: true do
++    xit "should allow sending multiple requests when persisted", net_connect: true do
+       @http = Net::HTTP.new('example.org')
+       @http.start
+       expect(@http.get("/")).to be_a(Net::HTTPSuccess)
+@@ -60,7 +60,7 @@ shared_examples_for "Net::HTTP" do
+       @http.finish
+     end
+ 
+-    it "should not leak file descriptors", net_connect: true do
++    xit "should not leak file descriptors", net_connect: true do
+       sockets = Set.new
+ 
+       @http = Net::HTTP.new('example.org')

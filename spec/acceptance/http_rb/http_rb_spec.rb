@@ -90,4 +90,28 @@ describe "HTTP.rb" do
       response.connection.close
     end
   end
+
+  it "should preserve request body encoding when matching requests" do
+    stub_request(:post, "www.example.com").with(body: (lambda {|body|
+      body.encoding == Encoding::UTF_8
+    }))
+    http_request(:post, "http://www.example.com/", body: "abc")
+  end
+
+  describe "when making real requests", net_connect: true do
+    before do
+      WebMock.allow_net_connect!
+    end
+
+    it "should allow streaming the response body" do
+      response = HTTP.get("http://localhost:#{WebMockServer.instance.port}")
+
+      read_body = ""
+      response.body.each do |chunk|
+        read_body << chunk
+      end
+
+      expect(read_body).to eql("hello world")
+    end
+  end
 end

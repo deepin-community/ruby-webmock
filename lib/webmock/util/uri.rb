@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module WebMock
 
   module Util
@@ -68,7 +70,7 @@ module WebMock
 
       def self.is_uri_localhost?(uri)
         uri.is_a?(Addressable::URI) &&
-        %w(localhost 127.0.0.1 0.0.0.0).include?(uri.host)
+        %w(localhost 127.0.0.1 0.0.0.0 [::1]).include?(uri.host)
       end
 
       private

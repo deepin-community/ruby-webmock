@@ -1,8 +1,11 @@
+# frozen_string_literal: true
+
 module HTTP
   class Response
     class Streamer
-      def initialize(str)
+      def initialize(str, encoding: Encoding::BINARY)
         @io = StringIO.new str
+        @encoding = encoding
       end
 
       def readpartial(size = nil, outbuf = nil)
@@ -14,7 +17,8 @@ module HTTP
           end
         end
 
-        @io.read size, outbuf
+        chunk = @io.read size, outbuf
+        chunk.force_encoding(@encoding) if chunk
       end
 
       def close

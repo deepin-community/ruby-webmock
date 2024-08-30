@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module WebMock
 
   class StubRegistry
@@ -10,25 +12,39 @@ module WebMock
     end
 
     def global_stubs
-      @global_stubs ||= []
+      @global_stubs ||= Hash.new { |h, k| h[k] = [] }
     end
 
     def reset!
       self.request_stubs = []
     end
 
-    def register_global_stub(&block)
+    def register_global_stub(order = :before_local_stubs, &block)
+      unless %i[before_local_stubs after_local_stubs].include?(order)
+        raise ArgumentError.new("Wrong order. Use :before_local_stubs or :after_local_stubs")
+      end
+
       # This hash contains the responses returned by the block,
       # keyed by the exact request (using the object_id).
       # That way, there's no race condition in case #to_return
       # doesn't run immediately after stub.with.
       responses = {}
+      response_lock = Mutex.new
 
-      stub = ::WebMock::RequestStub.new(:any, /.*/).with { |request|
-        responses[request.object_id] = yield(request)
-      }.to_return(lambda { |request| responses.delete(request.object_id) })
+      stub = ::WebMock::RequestStub.new(:any, ->(uri) { true }).with { |request|
+        update_response = -> { responses[request.object_id] = yield(request) }
 
-      global_stubs.push stub
+        # The block can recurse, so only lock if we don't already own it
+        if response_lock.owned?
+          update_response.call
+        else
+          response_lock.synchronize(&update_response)
+        end
+      }.to_return(lambda { |request|
+        response_lock.synchronize { responses.delete(request.object_id) }
+      })
+
+      global_stubs[order].push stub
     end
 
     def register_request_stub(stub)
@@ -54,9 +70,10 @@ module WebMock
     private
 
     def request_stub_for(request_signature)
-      (global_stubs + request_stubs).detect { |registered_request_stub|
-        registered_request_stub.request_pattern.matches?(request_signature)
-      }
+      (global_stubs[:before_local_stubs] + request_stubs + global_stubs[:after_local_stubs])
+        .detect { |registered_request_stub|
+          registered_request_stub.request_pattern.matches?(request_signature)
+        }
     end
 
     def evaluate_response_for_request(response, request_signature)

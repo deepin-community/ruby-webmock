@@ -1,4 +1,4 @@
-require 'base64'
+# frozen_string_literal: true
 
 module WebMock
 
@@ -6,18 +6,21 @@ module WebMock
 
     class Headers
 
+      STANDARD_HEADER_DELIMITER = '-'
+      NONSTANDARD_HEADER_DELIMITER = '_'
+      JOIN = ', '
+
       def self.normalize_headers(headers)
         return nil unless headers
-        array = headers.map { |name, value|
-          [name.to_s.split(/_|-/).map { |segment| segment.capitalize }.join("-"),
-           case value
+
+        headers.each_with_object({}) do |(name, value), new_headers|
+          new_headers[normalize_name(name)] =
+            case value
             when Regexp then value
-            when Array then (value.size == 1) ? value.first.to_s : value.map {|v| v.to_s}.sort
+            when Array then (value.size == 1) ? value.first.to_s : value.map(&:to_s).sort
             else value.to_s
-           end
-          ]
-        }
-        Hash[*array.inject([]) {|r,x| r + x}]
+            end
+        end
       end
 
       def self.sorted_headers_string(headers)
@@ -54,7 +57,17 @@ module WebMock
       end
 
       def self.basic_auth_header(*credentials)
-        "Basic #{Base64.strict_encode64(credentials.join(':')).chomp}"
+        strict_base64_encoded = [credentials.join(':')].pack("m0")
+        "Basic #{strict_base64_encoded.chomp}"
+      end
+
+      def self.normalize_name(name)
+        name
+          .to_s
+          .tr(NONSTANDARD_HEADER_DELIMITER, STANDARD_HEADER_DELIMITER)
+          .split(STANDARD_HEADER_DELIMITER)
+          .map!(&:capitalize)
+          .join(STANDARD_HEADER_DELIMITER)
       end
 
     end

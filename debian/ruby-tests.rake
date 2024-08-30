@@ -3,6 +3,13 @@ require "rspec"
 
 ENV["NO_CONNECTION"]="true"
 
+# Some tests rely on http://0.0.0.0 and they fail in Ubuntu autopkgtest env.
+if ENV["AUTOPKGTEST_TMP"]
+  if ENV["no_proxy"]
+    ENV["no_proxy"] += ",0.0.0.0"
+  end
+end
+
 RSpec::Core::RakeTask.new(:spec) do |t|
   t.rspec_opts = ["-c", "-f progress", "-r ./spec/spec_helper.rb"]
   t.pattern = FileList["spec/**/*_spec.rb"].exclude("spec/acceptance/patron/*").exclude('spec/quality_spec.rb').exclude('spec/acceptance/async_http_client/*').exclude('spec/acceptance/excon/excon_spec.rb').exclude('spec/acceptance/http_rb/http_rb_spec.rb')

@@ -1,3 +1,5 @@
+require 'ostruct'
+
 module AsyncHttpClientSpecHelper
   def http_request(method, url, options = {}, &block)
     endpoint = Async::HTTP::Endpoint.parse(url)
@@ -11,12 +13,12 @@ module AsyncHttpClientSpecHelper
       end
     end
     headers.push(
-      ['authorization', 'Basic ' + Base64.strict_encode64(options[:basic_auth].join(':'))]
+      ['authorization', WebMock::Util::Headers.basic_auth_header(options[:basic_auth])]
     ) if options[:basic_auth]
 
     body = options[:body]
 
-    Async do
+    result = Async do
       begin
         Async::HTTP::Client.open(endpoint) do |client|
           response = client.send(
@@ -34,6 +36,8 @@ module AsyncHttpClientSpecHelper
         e
       end
     end.wait
+
+    result.is_a?(Exception) ? raise(result) : result
   end
 
   def client_timeout_exception_class
@@ -42,6 +46,10 @@ module AsyncHttpClientSpecHelper
 
   def connection_refused_exception_class
     Errno::ECONNREFUSED
+  end
+
+  def connection_error_class
+    HTTP::ConnectionError
   end
 
   def http_library
